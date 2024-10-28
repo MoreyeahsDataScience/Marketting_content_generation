@@ -23,7 +23,7 @@ mongo_client = get_mongo_client()
 # Hugging Face API settings
 API_URL_FLUX = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
 API_URL_Midjourney = "https://api-inference.huggingface.co/models/Jovie/Midjourney"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer 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"}
 genai.configure(api_key='AIzaSyDJwy0_cazhBdIn9I673-W7nOmxeDZXBVo')
 
 st.set_page_config(
@@ -168,6 +168,7 @@ if st.button("Generate 7-Day Marketing Content"):
             input_text1 = f""" create a attractive image for social media for Marketing of product with {Punchline} and {title} and some of the Keywords to consider {Keywords} """
             # Generate the image from the generated marketing text
             response = query({"inputs": input_text1}, model_url)
+            print(response)
             if response.status_code == 200:
                 try:
                     # Attempt to open the image from the response content
