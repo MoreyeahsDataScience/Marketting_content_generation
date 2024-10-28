@@ -13,9 +13,12 @@ from pydrive.drive import GoogleDrive
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, timedelta
 import os
+import boto3
+from botocore.exceptions import NoCredentialsError
+from dotenv import load_dotenv
 
 
-
+load_dotenv()
 headers = {"Authorization": "Bearer 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"}
 mongo_client = get_mongo_client()
 # Assuming DALLE module for text-to-image conversion
@@ -23,7 +26,7 @@ mongo_client = get_mongo_client()
 # Hugging Face API settings
 API_URL_FLUX = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
 API_URL_Midjourney = "https://api-inference.huggingface.co/models/Jovie/Midjourney"
-headers = {"Authorization": "Bearer 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"}
+headers = {"Authorization": "Bearer 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"}
 genai.configure(api_key='AIzaSyDJwy0_cazhBdIn9I673-W7nOmxeDZXBVo')
 
 st.set_page_config(
@@ -65,18 +68,28 @@ def authenticate_drive():
     return drive
 
 
-def upload_image_to_drive(drive, filename):
-    
-    # image.save(filename)
-    
+def upload_image_to_s3(file_path,date, bucket_name="pythonteam" ):
+    object_name="new folder/"+date+".png"
+    # Initialize the S3 client with your credentials
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv("ACCESS_KEY"),
+        aws_secret_access_key=os.getenv("SECRET_KEY")
+    )
 
-    file_drive= drive.CreateFile({'title':filename})
-    file_drive.SetContentFile(filename)
-    file_drive.Upload()
+    try:
+        # Upload the file to the specified S3 bucket and object path
+        s3_client.upload_file(file_path, bucket_name, object_name, ExtraArgs={'ContentType': 'image/png'})
+        print(f"Successfully uploaded {file_path} to s3://{bucket_name}/{object_name}")
 
-    file_drive.InsertPermission({'type':"anyone",'value': 'anyone','role':'reader'})
+        # Generate the public URL
+        file_url = f"https://{bucket_name}.s3.amazonaws.com/{object_name}"
+        print("Image uploaded successfully:", file_url)
+        return file_url
 
-    return file_drive['alternateLink']
+    except NoCredentialsError:
+        print("Credentials not available.")
+        return None
 
 st.write("# 7-Day Marketing Content Generator 📅")
 
@@ -164,7 +177,8 @@ if st.button("Generate 7-Day Marketing Content"):
             Punchline = content["Punchline"]
             Keywords = content["Keywords"]
             # Choose model API URL based on the selection
-            model_url = API_URL_FLUX if image_model == "FLUX" else API_URL_Midjourney
+            # model_url = API_URL_FLUX if image_model == "FLUX" else API_URL_Midjourney
+            model_url=API_URL_Midjourney
             input_text1 = f""" create a attractive image for social media for Marketing of product with {Punchline} and {title} and some of the Keywords to consider {Keywords} """
             # Generate the image from the generated marketing text
             response = query({"inputs": input_text1}, model_url)
@@ -180,10 +194,10 @@ if st.button("Generate 7-Day Marketing Content"):
                     date=date.replace('/','-')
                     image.save(date+".png")
                     content["Date"]= date
-                    file_url= upload_image_to_drive(drive, date+".png")
+                    file_url= upload_image_to_s3(date+".png", date)
                     content["Image_URL"]= file_url
                     filename=filename + timedelta(days=1)
-                    if os.exists(date+".png"):
+                    if os.path.exists(date+".png"):
                         os.remove(date+".png")
                 except Exception as e:
                     st.error(f"Error displaying image: {e}")
