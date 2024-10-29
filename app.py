@@ -8,8 +8,7 @@ from PIL import Image
 import io
 from io import BytesIO
 import numpy as np
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, timedelta
 import os
@@ -38,34 +37,7 @@ def query(payload,API_URL):
     response = requests.post(API_URL, headers=headers, json=payload)
     return response
 
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
 
-def authenticate_drive():
-    gauth = GoogleAuth()
-
-    # Specify the correct settings file if needed
-    gauth.DEFAULT_SETTINGS['client_config_file'] = 'client_secrets.json'
-
-    try:
-        gauth.LoadCredentialsFile("credentials.json")
-        if gauth.credentials is None:
-            # If no valid credentials, authenticate via web flow
-            gauth.LocalWebserverAuth()
-        elif gauth.access_token_expired:
-            # Refresh them if expired
-            gauth.Refresh()
-        else:
-            gauth.Authorize()
-
-        # Save the credentials to a file for future use
-        gauth.SaveCredentialsFile("credentials.json")
-
-    except Exception as e:
-        print(f"Error during authentication: {e}")
-
-    drive = GoogleDrive(gauth)
-    return drive
 
 
 def upload_image_to_s3(file_path,date, bucket_name="pythonteam" ):
@@ -168,7 +140,7 @@ if st.button("Generate 7-Day Marketing Content"):
 
     filename= datetime.now().date()
     image_model="FLUX"
-    drive=authenticate_drive()
+    
     for text in seven_day_content:
         content= text['generated_text']
         print(content)
