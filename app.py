@@ -165,6 +165,7 @@ if st.button("Generate 7-Day Marketing Content"):
                     date=filename.strftime("%x")
                     date=date.replace('/','-')
                     image.save(date+".png")
+                    content["Platform"]= target_platform
                     content["Date"]= date
                     file_url= upload_image_to_s3(date+".png", date)
                     content["Image_URL"]= file_url
