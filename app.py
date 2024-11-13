@@ -40,8 +40,8 @@ def query(payload,API_URL):
 
 
 
-def upload_image_to_s3(file_path,date, bucket_name="pythonteam" ):
-    object_name="new folder/"+date+".png"
+def upload_image_to_s3(file_path, bucket_name="pythonteam" ):
+    object_name="new folder/"+file_path
     # Initialize the S3 client with your credentials
     s3_client = boto3.client(
         's3',
@@ -164,10 +164,11 @@ if st.button("Generate 7-Day Marketing Content"):
                     st.image(image, caption=f"Generated Image ({image_model})", use_column_width=True)
                     date=filename.strftime("%x")
                     date=date.replace('/','-')
-                    image.save(date+".png")
+                    image.save(f"{target_platform}_"+date+".png")
                     content["Platform"]= target_platform
                     content["Date"]= date
-                    file_url= upload_image_to_s3(date+".png", date)
+                    
+                    file_url= upload_image_to_s3(f"{target_platform}_"+date+".png")
                     content["Image_URL"]= file_url
                     filename=filename + timedelta(days=1)
                     if os.path.exists(date+".png"):
