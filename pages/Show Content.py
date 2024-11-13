@@ -123,7 +123,13 @@ if data:
         # Check for matching images by date
         matched = False
         for dates in images:
-            date_str = dates.split("/")[1].split(".")[0]
+            print(dates)
+            try:
+                date= dates.split("_")[1]
+            except:
+                date=dates
+            date_str = date.split(".")[0]
+            # date_s3=date_str.split(".")[0]
             if mongo_date == date_str:
                 image = show_image_from_s3(bucket_name, dates)
                 if image:
